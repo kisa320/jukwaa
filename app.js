@@ -82,6 +82,7 @@
     $("#mp-send").onclick = () => {
       const ph = $("#mp-phone").value.replace(/\s/g, "");
       if (!/^(0|\+?254)?[17]\d{8}$/.test(ph)) return toast("Enter a valid Safaricom number");
+      if (window.JUKWAA_API) return realStkPush(ph, amount, label, onSuccess);
       $("#sheet").innerHTML = `<div class="mpesa-head"><span class="mpesa-logo">M-PESA</span><b>Check your phone</b></div>
         <div class="phone-prompt"><b>M-PESA</b><br>Do you want to pay KES ${amount}.00 to JUKWAA LTD for ${label}?<br>Enter M-PESA PIN:
         <input id="mp-pin" type="password" maxlength="4" inputmode="numeric" placeholder="••••" />
@@ -101,6 +102,37 @@
         }, 1600);
       };
     };
+  }
+
+  function paidScreen(code, amount, onSuccess) {
+    state.payments.unshift({ code, amount, label: "M-Pesa payment", at: Date.now() }); save();
+    $("#sheet").innerHTML = `<div class="success"><div class="tick">✅</div><h3>Payment confirmed</h3>
+      <div class="receipt">${code} Confirmed. KES ${amount}.00 paid to JUKWAA.</div>
+      <button class="btn primary big" id="mp-done">Continue</button></div>`;
+    $("#mp-done").onclick = () => { closeModal(); onSuccess(code); };
+  }
+  async function realStkPush(phone, amount, label, onSuccess) {
+    const api = window.JUKWAA_API.replace(/\/$/, "");
+    $("#sheet").innerHTML = `<div class="mpesa-head"><span class="mpesa-logo">M-PESA</span><b>Check your phone</b></div>
+      <h3 style="text-align:center">Enter your M-Pesa PIN on your phone</h3><div class="spinner"></div>
+      <p style="text-align:center" id="mp-status">Sending payment prompt…</p><button class="btn ghost" id="mp-cancel">Cancel</button>`;
+    let cancelled = false;
+    $("#mp-cancel").onclick = () => { cancelled = true; closeModal(); };
+    const fail = msg => { if (!cancelled) $("#sheet").innerHTML = `<h3>Payment not completed</h3><p>${msg}</p><button class="btn big" id="mp-x">Close</button>`, $("#mp-x").onclick = closeModal; };
+    try {
+      const r = await fetch(`${api}/mpesa/stkpush`, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, amount, reference: "Jukwaa", description: label.slice(0, 13) }) });
+      const d = await r.json();
+      if (!r.ok) return fail(d.error || "Could not send M-Pesa prompt");
+      $("#mp-status").textContent = "Prompt sent. Waiting for confirmation…";
+      for (let i = 0; i < 30 && !cancelled; i++) {
+        await new Promise(res => setTimeout(res, 3000));
+        const s = await (await fetch(`${api}/mpesa/status/${d.checkoutRequestId}`)).json();
+        if (s.status === "paid") return paidScreen(s.receipt || d.checkoutRequestId, amount, onSuccess);
+        if (s.status === "failed") return fail(s.reason || "Payment was cancelled or failed");
+      }
+      fail("Timed out waiting for M-Pesa confirmation.");
+    } catch (e) { fail("Could not reach the payment server."); }
   }
 
   function payForShow(c, after) {
