@@ -49,7 +49,7 @@ def normalize_phone(phone):
 @app.get("/")
 def health():
     return jsonify(ok=True, env=ENV, configured=bool(CONSUMER_KEY and CONSUMER_SECRET and CALLBACK_URL),
-                   paystack=bool(PAYSTACK_SECRET and PAYSTACK_PUBLIC))
+                   paystack=bool(PAYSTACK_SECRET))
 
 
 @app.post("/mpesa/stkpush")
@@ -123,7 +123,7 @@ def ps_headers():
 
 @app.get("/paystack/config")
 def paystack_config():
-    return jsonify(publicKey=PAYSTACK_PUBLIC, enabled=bool(PAYSTACK_SECRET and PAYSTACK_PUBLIC))
+    return jsonify(publicKey=PAYSTACK_PUBLIC, enabled=bool(PAYSTACK_SECRET))
 
 
 @app.post("/paystack/init")
