@@ -77,8 +77,10 @@
       <h3>Pay KES ${amount}</h3><p>We'll send a payment prompt to your phone.</p>
       <div class="col"><input id="mp-phone" value="${phone}" placeholder="07XX XXX XXX" inputmode="tel" />
       <button class="btn mpesa big" id="mp-send">Send M-Pesa prompt</button>
+      ${window.JUKWAA_API ? `<button class="btn primary big" id="ps-pay">Pay with Paystack (M-Pesa / card)</button>` : ""}
       <button class="btn ghost" id="mp-cancel">Cancel</button></div>`);
     $("#mp-cancel").onclick = closeModal;
+    if ($("#ps-pay")) $("#ps-pay").onclick = () => paystackPay($("#mp-phone").value.replace(/\s/g, ""), amount, label, onSuccess);
     $("#mp-send").onclick = () => {
       const ph = $("#mp-phone").value.replace(/\s/g, "");
       if (!/^(0|\+?254)?[17]\d{8}$/.test(ph)) return toast("Enter a valid Safaricom number");
@@ -132,6 +134,39 @@
         if (s.status === "failed") return fail(s.reason || "Payment was cancelled or failed");
       }
       fail("Timed out waiting for M-Pesa confirmation.");
+    } catch (e) { fail("Could not reach the payment server."); }
+  }
+
+  function loadPaystack() {
+    if (window.PaystackPop) return Promise.resolve();
+    return new Promise((res, rej) => { const sc = document.createElement("script");
+      sc.src = "https://js.paystack.co/v2/inline.js"; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+  }
+  async function paystackPay(phone, amount, label, onSuccess) {
+    const api = window.JUKWAA_API.replace(/\/$/, "");
+    $("#sheet").innerHTML = `<h3 style="text-align:center">Opening Paystack…</h3><div class="spinner"></div><p style="text-align:center" id="ps-status"></p>`;
+    const fail = msg => { $("#sheet").innerHTML = `<h3>Payment not completed</h3><p>${msg}</p><button class="btn big" id="mp-x">Close</button>`; $("#mp-x").onclick = closeModal; };
+    try {
+      await loadPaystack();
+      const r = await fetch(`${api}/paystack/init`, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, label, phone, email: state.user?.email || "" }) });
+      const d = await r.json();
+      if (!r.ok) return fail(d.error || "Could not start Paystack payment");
+      const verify = async () => {
+        $("#sheet").innerHTML = `<h3 style="text-align:center">Confirming payment…</h3><div class="spinner"></div>`;
+        for (let i = 0; i < 10; i++) {
+          const s = await (await fetch(`${api}/paystack/verify/${d.reference}`)).json();
+          if (s.status === "paid") return paidScreen(s.receipt || d.reference, amount, onSuccess);
+          if (s.status === "failed") return fail(s.reason || "Payment failed");
+          await new Promise(res => setTimeout(res, 3000));
+        }
+        fail("We couldn't confirm the payment yet. If you were charged, contact us with your reference: " + d.reference);
+      };
+      $("#modal").hidden = true; window.__paying = true;
+      new PaystackPop().resumeTransaction(d.accessCode, {
+        onSuccess: () => { window.__paying = false; $("#modal").hidden = false; verify(); },
+        onCancel: () => { window.__paying = false; $("#modal").hidden = false; fail("Payment was cancelled."); },
+      });
     } catch (e) { fail("Could not reach the payment server."); }
   }
 
@@ -475,7 +510,7 @@
   document.addEventListener("contextmenu", e => { if (e.target.closest(".protected,.card")) e.preventDefault(); });
   document.addEventListener("dragstart", e => e.preventDefault());
   const shield = on => { $("#shield").hidden = !on; };
-  window.addEventListener("blur", () => { if ($("#screen-room").classList.contains("active") && isPaid(currentRoom)) shield(true); });
+  window.addEventListener("blur", () => { if (!window.__paying && $("#screen-room").classList.contains("active") && isPaid(currentRoom)) shield(true); });
   window.addEventListener("focus", () => shield(false));
   document.addEventListener("visibilitychange", () => shield(document.hidden && $("#screen-room").classList.contains("active")));
   document.addEventListener("keyup", e => { if (e.key === "PrintScreen") { navigator.clipboard?.writeText(""); shield(true); setTimeout(() => shield(false), 1500); toast("Screenshots are not allowed on protected content"); } });
