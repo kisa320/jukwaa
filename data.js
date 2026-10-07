@@ -1,0 +1,43 @@
+const CATEGORIES = ["All", "Music", "Comedy", "Fitness", "Cooking", "Dance", "Tutoring", "Gaming"];
+
+const CREATORS = [
+  { id: "c1", name: "Wanjiru", age: 24, city: "Nairobi", category: "Music", price: 150, live: true, viewers: 312,
+    emoji: "🎤", colors: ["#ff6a88", "#ff99ac"], bio: "Acoustic Benga & Afro-soul covers. Requests open every Friday.",
+    trust: 94, rating: 4.9, shows: 86, reports: 0, verified: true, faceHidden: false,
+    history: [["Fri Acoustic Night", "3 days ago", 410, 4.9], ["Sauti Sol covers", "1 week ago", 288, 4.8], ["Original songs", "2 weeks ago", 196, 5.0]] },
+  { id: "c2", name: "Brian Otieno", age: 29, city: "Kisumu", category: "Comedy", price: 100, live: true, viewers: 1204,
+    emoji: "😂", colors: ["#f7971e", "#ffd200"], bio: "Stand-up from the lakeside. Clean jokes, loud laughs.",
+    trust: 88, rating: 4.7, shows: 140, reports: 1, verified: true, faceHidden: false,
+    history: [["Matatu Diaries", "Yesterday", 1530, 4.8], ["Office Politics", "5 days ago", 980, 4.6], ["Crowd work special", "2 weeks ago", 1102, 4.7]] },
+  { id: "c3", name: "Coach Amina", age: 31, city: "Mombasa", category: "Fitness", price: 200, live: false, viewers: 0,
+    emoji: "💪", colors: ["#00c6ff", "#0072ff"], bio: "45-minute HIIT and beach-body sessions. No equipment needed.",
+    trust: 97, rating: 4.9, shows: 220, reports: 0, verified: true, faceHidden: false,
+    history: [["Morning HIIT", "Today 6am", 640, 5.0], ["Core blast", "2 days ago", 512, 4.9], ["Stretch & recover", "4 days ago", 377, 4.8]] },
+  { id: "c4", name: "Chef Kamau", age: 35, city: "Nakuru", category: "Cooking", price: 120, live: true, viewers: 458,
+    emoji: "🍲", colors: ["#f857a6", "#ff5858"], bio: "Pilau, nyama choma and chapati the proper way. Cook along live.",
+    trust: 81, rating: 4.5, shows: 64, reports: 2, verified: true, faceHidden: false,
+    history: [["Perfect chapati", "2 days ago", 520, 4.6], ["Coastal pilau", "1 week ago", 401, 4.4], ["Mukimo night", "3 weeks ago", 233, 4.5]] },
+  { id: "c5", name: "Shiru Moves", age: 22, city: "Nairobi", category: "Dance", price: 150, live: true, viewers: 876,
+    emoji: "💃", colors: ["#8e2de2", "#4a00e0"], bio: "Gengetone & Amapiano choreography. Learn a full routine each show.",
+    trust: 76, rating: 4.3, shows: 38, reports: 3, verified: false, faceHidden: true,
+    history: [["Amapiano basics", "Yesterday", 902, 4.4], ["Gengetone party", "6 days ago", 650, 4.1], ["Freestyle Q&A", "2 weeks ago", 300, 4.3]] },
+  { id: "c6", name: "Mr. Mwangi", age: 40, city: "Eldoret", category: "Tutoring", price: 80, live: false, viewers: 0,
+    emoji: "📐", colors: ["#11998e", "#38ef7d"], bio: "KCSE Maths & Physics revision. Past papers solved live.",
+    trust: 99, rating: 5.0, shows: 310, reports: 0, verified: true, faceHidden: false,
+    history: [["KCSE Paper 2 2025", "Yesterday", 1340, 5.0], ["Calculus crash course", "4 days ago", 870, 4.9], ["Physics: waves", "1 week ago", 722, 5.0]] },
+  { id: "c7", name: "QuickCash254", age: 27, city: "Unknown", category: "Gaming", price: 300, live: true, viewers: 41,
+    emoji: "🎮", colors: ["#434343", "#000000"], bio: "FIFA tournaments, winner takes all!!! Pay first, join after.",
+    trust: 32, rating: 2.1, shows: 9, reports: 14, verified: false, faceHidden: true,
+    history: [["FIFA cup (cancelled)", "3 days ago", 60, 1.5], ["Tournament #2", "1 week ago", 33, 2.0], ["Started 40 min late", "2 weeks ago", 28, 2.8]] },
+  { id: "c8", name: "Achieng Plays", age: 25, city: "Nairobi", category: "Gaming", price: 100, live: true, viewers: 655,
+    emoji: "🕹️", colors: ["#fc466b", "#3f5efb"], bio: "Chill PS5 streams and community tournaments on Sundays.",
+    trust: 90, rating: 4.8, shows: 112, reports: 0, verified: true, faceHidden: false,
+    history: [["Sunday tourney", "4 days ago", 780, 4.9], ["Horror night", "1 week ago", 540, 4.7], ["Speedrun attempts", "2 weeks ago", 430, 4.8]] },
+  { id: "c9", name: "DJ Kibe", age: 28, city: "Thika", category: "Music", price: 150, live: false, viewers: 0,
+    emoji: "🎧", colors: ["#ee0979", "#ff6a00"], bio: "Weekend mixes: Bongo, Afrobeats, throwbacks. Shout-outs included.",
+    trust: 63, rating: 3.9, shows: 25, reports: 4, verified: false, faceHidden: true,
+    history: [["Saturday mix", "1 week ago", 210, 4.0], ["Throwback set", "2 weeks ago", 180, 3.6], ["Ended early", "3 weeks ago", 95, 3.2]] },
+];
+
+const FAN_NAMES = ["kev_254", "mercy.w", "otis", "njeri_k", "DJ_fan", "baraka", "lucy_m", "tonny", "faith", "sam_ke", "wambui", "eric.o", "zawadi", "moha", "aisha"];
+const CHAT_LINES = ["🔥🔥🔥", "Habari kutoka Kisumu!", "This is so good", "Play that one again 🙏", "Shout out to Mombasa!", "First time here, love it", "😂😂😂", "Uko fiti!", "Worth every bob", "Can you do a part 2?", "Sasa!", "Respect 👏"];

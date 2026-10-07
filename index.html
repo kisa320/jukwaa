@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Jukwaa — Live creators near you</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <!-- Welcome -->
+  <section id="screen-welcome" class="screen active">
+    <div class="welcome">
+      <div class="logo">Jukwaa<span>.</span></div>
+      <p class="tagline">Swipe. Pay with M-Pesa. Join live shows by Kenyan creators.</p>
+      <div class="welcome-actions">
+        <button class="btn primary big" data-action="signup-fan">Create free account</button>
+        <button class="btn gold big" data-action="signup-creator">Become a creator · KES 50</button>
+        <button class="btn ghost" data-action="guest">Continue as guest</button>
+      </div>
+      <p class="fine">Demo only. Payments are simulated. Nothing is charged.</p>
+    </div>
+  </section>
+
+  <!-- Discover -->
+  <section id="screen-discover" class="screen">
+    <header class="topbar">
+      <div class="logo small">Jukwaa<span>.</span></div>
+      <div class="filters" id="filters"></div>
+      <button class="avatar-btn" id="me-btn" title="Account"></button>
+    </header>
+    <div class="deck-wrap">
+      <div class="deck" id="deck"></div>
+      <div class="empty" id="deck-empty" hidden>
+        <p>You've seen everyone in this category.</p>
+        <button class="btn primary" data-action="reset-deck">Start over</button>
+      </div>
+    </div>
+    <div class="swipe-controls">
+      <button class="round nope" data-action="nope" title="Pass (←)">✕</button>
+      <button class="round info" data-action="info" title="Open profile (↑)">i</button>
+      <button class="round like" data-action="like" title="Like (→)">♥</button>
+    </div>
+    <nav class="tabbar">
+      <button class="active" data-nav="discover">Discover</button>
+      <button data-nav="liked">Liked <b id="liked-count">0</b></button>
+      <button data-nav="studio">Studio</button>
+    </nav>
+  </section>
+
+  <!-- Liked -->
+  <section id="screen-liked" class="screen">
+    <header class="topbar"><button class="back" data-nav="discover">‹</button><h2>Liked & joined</h2><span></span></header>
+    <div class="list" id="liked-list"></div>
+    <nav class="tabbar">
+      <button data-nav="discover">Discover</button>
+      <button class="active" data-nav="liked">Liked</button>
+      <button data-nav="studio">Studio</button>
+    </nav>
+  </section>
+
+  <!-- Profile / Live room -->
+  <section id="screen-room" class="screen">
+    <header class="topbar">
+      <button class="back" data-nav="discover">‹</button>
+      <div class="room-title" id="room-title"></div>
+      <button class="btn small danger-outline" data-action="report">Report</button>
+    </header>
+    <div class="room protected" id="room"></div>
+  </section>
+
+  <!-- Studio -->
+  <section id="screen-studio" class="screen">
+    <header class="topbar"><button class="back" data-nav="discover">‹</button><h2>Creator studio</h2><span></span></header>
+    <div class="studio" id="studio"></div>
+    <nav class="tabbar">
+      <button data-nav="discover">Discover</button>
+      <button data-nav="liked">Liked</button>
+      <button class="active" data-nav="studio">Studio</button>
+    </nav>
+  </section>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toasts" id="toasts"></div>
+<div class="privacy-shield" id="shield" hidden><div>Content hidden while this window is not in focus<br><small>Protected content · Jukwaa</small></div></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
