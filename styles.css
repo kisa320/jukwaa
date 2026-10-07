@@ -175,3 +175,4 @@ input, select { background:var(--panel); border:1px solid #2c2c38; color:var(--t
 .reactions .tip-react { background:var(--gold); }
 .tip-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .chatbar .btn { white-space:nowrap; }
+.fine a { color:var(--muted); }
