@@ -1,7 +1,7 @@
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const STORE = "jukwaa-demo-v1";
+  const STORE = "jukwaa-demo-v2";
   const state = Object.assign({ user: null, paid: {}, liked: [], passed: [], reports: {}, filter: "All", creatorProfile: null, earnings: 0, payments: [] },
     JSON.parse(localStorage.getItem(STORE) || "{}"));
   const save = () => localStorage.setItem(STORE, JSON.stringify(state));
@@ -135,9 +135,11 @@
         <h3>${c.name} <small>${c.age}</small> ${c.verified ? '<span class="verified" title="ID verified">✔</span>' : ""}</h3>
         <div class="meta">${trustBadge(c)} <span>⭐ ${c.rating}</span> <span>${c.category}</span> <span>📍 ${c.city}</span></div>
         <div style="color:#ccc;font-size:14px">${c.bio}</div>
+        <div class="chips">${PERKS[c.category].slice(0, 2).map(([l, p]) => `<span class="chip">${l} · KES ${p}</span>`).join("")}</div>
         <div class="pay-row">
           <div class="price">Entry<b>KES ${c.price}</b></div>
           <button class="pay-btn ${paid ? "paid" : ""}" data-pay="${c.id}">${paid ? "▶ Enter show" : `Pay KES ${c.price} to join`}</button>
+          <button class="tip-btn" data-tip="${c.id}" title="Tip creator">💸<small>Tip</small></button>
         </div>
       </div>`;
   }
@@ -220,12 +222,12 @@
         <div class="live-badge ${c.live ? "" : "off"}">${c.live ? "● LIVE" : "Offline"}</div>
         <div class="viewers-badge" id="vcount">👁 ${fmt(c.viewers)}</div>
         ${paid ? watermark() + `<div class="chat" id="chat"></div>
-          <div class="reactions"><button data-react="❤️">❤️</button><button data-react="🔥">🔥</button><button data-react="😂">😂</button><button data-react="👏">👏</button></div>`
+          <div class="reactions"><button data-tip="${c.id}" class="tip-react" title="Tip">💸</button><button data-react="❤️">❤️</button><button data-react="🔥">🔥</button><button data-react="😂">😂</button><button data-react="👏">👏</button></div>`
         : `<div class="overlay-pay"><div style="font-size:44px">🔒</div><b style="font-size:20px">${c.live ? "Live now" : "Next show soon"} · KES ${c.price}</b>
             <div style="color:#ddd;font-size:14px">Pay once to unblur the live show, photos and videos.</div>
             <button class="pay-btn" data-pay="${c.id}">Pay KES ${c.price} with M-Pesa</button></div>`}
       </div>
-      ${paid ? `<div class="chatbar"><input id="chat-input" placeholder="Say something…" maxlength="120"><button class="btn primary" id="chat-send">Send</button></div>` : ""}
+      ${paid ? `<div class="chatbar"><input id="chat-input" placeholder="Say something…" maxlength="120"><button class="btn primary" id="chat-send">Send</button><button class="btn gold" data-tip="${c.id}">💸 Tip</button></div>` : ""}
       <div class="section" style="padding-bottom:0">
         <div class="meta" style="margin:0">${trustBadge(c)} <span>⭐ ${c.rating}</span> <span>${c.category}</span> <span>📍 ${c.city}</span>
         <span class="viewer-strip">${FAN_NAMES.slice(0, 6).map(n => `<i style="background:${colorFor(n)}">${n[0].toUpperCase()}</i>`).join("")}</span></div>
@@ -239,7 +241,11 @@
   function tabBody(c, tab, paid) {
     if (tab === "live") return `<h4>About</h4><div style="color:#ccc">${c.bio}</div>
       <p style="color:var(--muted);font-size:13px">Unlimited members can watch together. ${c.faceHidden ? "This creator keeps her face hidden — fans can request a face reveal." : ""}</p>
-      ${c.faceHidden && paid ? `<button class="btn small" id="req-face">🙋 Request face reveal</button>` : ""}`;
+      ${c.faceHidden && paid ? `<button class="btn small" id="req-face">🙋 Request face reveal</button>` : ""}
+      <h4 style="margin-top:16px">Perks</h4>
+      ${PERKS[c.category].map(([l, p], i) => `<div class="row"><div class="grow"><b>${l}</b><div class="sub">${paid ? "Delivered live during the show" : "Join the show to unlock perks"}</div></div>
+        <button class="btn small mpesa" data-perk="${i}" ${paid ? "" : "disabled"}>KES ${p}</button></div>`).join("")}
+      <button class="btn gold big" data-tip="${c.id}" style="margin-top:6px">💸 Tip ${c.name}</button>`;
     if (tab === "photos" || tab === "videos") {
       const isVid = tab === "videos";
       return `<div class="grid">${Array.from({ length: 9 }, (_, i) => `<div class="tile">
@@ -282,6 +288,37 @@
     }, 1400));
   }
   function leaveRoom() { roomTimers.forEach(clearInterval); roomTimers = []; }
+
+  function needAccount() {
+    if (state.user) return false;
+    toast("Create a free account to pay with M-Pesa", { label: "Sign up", fn: () => signupSheet("fan") });
+    return true;
+  }
+  function tipSheet(c) {
+    if (needAccount()) return;
+    openModal(`<h3>Tip ${c.name} 💸</h3><p>100% goes to the creator (demo). Tips show up in the live chat.</p>
+      <div class="tip-grid">${[20, 50, 100, 200, 500, 1000].map(n => `<button class="btn" data-tipamt="${n}">KES ${n}</button>`).join("")}</div>
+      <div class="col" style="margin-top:10px"><input id="tip-custom" type="number" min="10" placeholder="Other amount (KES)">
+      <button class="btn gold big" id="tip-go">Send tip</button></div>`);
+    const send = amt => {
+      if (!(amt >= 10)) return toast("Minimum tip is KES 10");
+      mpesaFlow({ amount: amt, label: `Tip for ${c.name}`, onSuccess: () => {
+        toast(`💸 You tipped <b>${c.name}</b> KES ${amt}. Asante!`);
+        if (currentRoom?.id === c.id) { addChat("@" + handle(), `💸 tipped KES ${amt}`); for (let i = 0; i < 6; i++) setTimeout(() => floatEmoji("💸"), i * 150); }
+      }});
+    };
+    $$("[data-tipamt]", $("#sheet")).forEach(b => b.onclick = () => send(+b.dataset.tipamt));
+    $("#tip-go").onclick = () => send(+$("#tip-custom").value);
+  }
+  function buyPerk(c, i) {
+    if (needAccount()) return;
+    const [label, price] = PERKS[c.category][i];
+    mpesaFlow({ amount: price, label: `${label} from ${c.name}`, onSuccess: () => {
+      toast(`✅ <b>${label}</b> purchased. ${c.name} has been notified.`);
+      addChat("@" + handle(), `bought ${label}`);
+      setTimeout(() => addChat(c.name, `Thanks @${handle()}! Coming up next 🙌`), 2500);
+    }});
+  }
 
   function reportSheet() {
     const c = currentRoom;
@@ -364,9 +401,11 @@
 
   // ---------- global events ----------
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-action],[data-nav],[data-filter],[data-pay],[data-open],[data-tab],[data-react],#chat-send,#req-face,#me-btn");
+    const t = e.target.closest("[data-tip],[data-perk],[data-action],[data-nav],[data-filter],[data-pay],[data-open],[data-tab],[data-react],#chat-send,#req-face,#me-btn");
     if (!t) return;
     if (t.dataset.pay) { e.stopPropagation(); const c = byId(t.dataset.pay); return isPaid(c) ? openRoom(c.id) : payForShow(c, () => currentRoom?.id === c.id && $("#screen-room").classList.contains("active") ? renderRoom("live") : openRoom(c.id)); }
+    if (t.dataset.tip) { e.stopPropagation(); return tipSheet(byId(t.dataset.tip)); }
+    if (t.dataset.perk) return buyPerk(currentRoom, +t.dataset.perk);
     if (t.dataset.nav) return show(t.dataset.nav);
     if (t.dataset.filter) { state.filter = t.dataset.filter; save(); return renderDeck(); }
     if (t.dataset.open) return openRoom(t.dataset.open);
